@@ -9,7 +9,7 @@ const Header = () => {
   return (
     <header className="header">
       <nav className="nav-container">
-        <div className="logo">LEBLOC</div>
+        
         <ul className="nav-menu">
           <li><a href="#estrutura" className="nav-link">Estrutura</a></li>
           <li><a href="#formatura" className="nav-link">Formatura</a></li>
