@@ -37,7 +37,7 @@ vercel
 2. **Configurações automáticas**:
    - O Vercel detectará automaticamente as configurações
    - Build Command: `npm run build`
-   - Output Directory: `public`
+   - Output Directory: `dist/public`
 
 ### 4. Variáveis de Ambiente
 
