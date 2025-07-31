@@ -13,8 +13,8 @@ const DEFAULT_ADMIN = {
 };
 
 export const initializeAdmin = (): void => {
-  const users = getUsers();
-  if (users.length === 0) {
+  const existingUsers = localStorage.getItem(USERS_STORAGE_KEY);
+  if (!existingUsers) {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([DEFAULT_ADMIN]));
   }
 };
