@@ -1,6 +1,10 @@
-import { MediaItem } from '../types';
+import type { MediaItem } from '../types';
+import { generateId } from './auth';
 
-export const MEDIA_STORAGE_KEY = 'gallery_media';
+const MEDIA_STORAGE_KEY = 'gallery_media';
+
+// Configuração do Object Storage do Replit
+const OBJECT_STORAGE_API = '/api/storage';
 
 export const saveMedia = (media: MediaItem): void => {
   const mediaList = getMediaList();
@@ -25,13 +29,13 @@ export const getAllMedia = (): MediaItem[] => {
 export const deleteMedia = (mediaId: string, userId: string): boolean => {
   const mediaList = getMediaList();
   const mediaIndex = mediaList.findIndex(m => m.id === mediaId && m.userId === userId);
-  
+
   if (mediaIndex >= 0) {
     mediaList.splice(mediaIndex, 1);
     localStorage.setItem(MEDIA_STORAGE_KEY, JSON.stringify(mediaList));
     return true;
   }
-  
+
   return false;
 };
 
@@ -49,14 +53,14 @@ export const createVideoThumbnail = (file: File): Promise<string> => {
     const video = document.createElement('video');
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     video.addEventListener('loadedmetadata', () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      
+
       video.currentTime = 1; // Pega frame no segundo 1
     });
-    
+
     video.addEventListener('seeked', () => {
       if (ctx) {
         ctx.drawImage(video, 0, 0);
@@ -66,9 +70,9 @@ export const createVideoThumbnail = (file: File): Promise<string> => {
         reject(new Error('Canvas context not available'));
       }
     });
-    
+
     video.addEventListener('error', reject);
-    
+
     const url = URL.createObjectURL(file);
     video.src = url;
     video.load();
@@ -77,10 +81,10 @@ export const createVideoThumbnail = (file: File): Promise<string> => {
 
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
