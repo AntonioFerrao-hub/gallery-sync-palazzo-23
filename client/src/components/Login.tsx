@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { findUserByEmail, setCurrentUser } from '../utils/auth';
 import { useToast } from '../hooks/use-toast';
 
@@ -7,7 +7,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,7 +41,7 @@ const Login = () => {
         title: "Sucesso",
         description: `Bem-vindo, ${user.name}!`
       });
-      navigate('/admin');
+      setLocation('/admin');
     } catch (error) {
       toast({
         title: "Erro",
