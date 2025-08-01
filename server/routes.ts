@@ -104,6 +104,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/photos/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { title, description, externalLink } = req.body;
+      
+      if (!title) {
+        return res.status(400).json({ error: 'Título é obrigatório' });
+      }
+      
+      const photo = await storage.updatePhoto(id, { title, description, externalLink });
+      res.json(photo);
+    } catch (error) {
+      console.error('Erro ao atualizar foto:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
   app.get('/api/photos/category/:categoryId', async (req, res) => {
     try {
       const categoryId = parseInt(req.params.categoryId);
@@ -208,10 +225,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Foto não encontrada' });
       }
 
-      // Deletar arquivo físico
-      const fs = require('fs');
-      const path = require('path');
-      const filePath = path.join(__dirname, '..', photo.imageUrl);
+      // Deletar arquivo físico  
+      const filePath = path.join(process.cwd(), photo.imageUrl);
       
       try {
         if (fs.existsSync(filePath)) {
