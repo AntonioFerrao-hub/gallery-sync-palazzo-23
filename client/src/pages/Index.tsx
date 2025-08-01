@@ -1,13 +1,13 @@
 import Header from '../components/Header';
-import GallerySection from '../components/GallerySection';
-import SimpleMediaModal from '../components/SimpleMediaModal';
+import PublicGallery from '../components/PublicGallery';
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <GallerySection />
-      <SimpleMediaModal />
+      <div className="container mx-auto px-4 py-8">
+        <PublicGallery />
+      </div>
     </div>
   );
 };

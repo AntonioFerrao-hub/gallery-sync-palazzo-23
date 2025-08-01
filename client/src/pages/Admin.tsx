@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
-import { Upload, LogOut, Users, Plus } from 'lucide-react';
-import UploadModal from '../components/UploadModal';
+import { Upload, LogOut, Users, Plus, Images } from 'lucide-react';
 import { logout, getCurrentUser } from '../utils/auth';
 import { useToast } from '../hooks/use-toast';
-import GallerySection from '../components/GallerySection';
-import SimpleMediaModal from '../components/SimpleMediaModal';
 import UserManagement from '../components/UserManagement';
+import CategoryManagement from '../components/CategoryManagement';
+import PhotoUpload from '../components/PhotoUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 const Admin = () => {
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('gallery');
+  const [activeTab, setActiveTab] = useState('categories');
   const { toast } = useToast();
   const user = getCurrentUser();
 
@@ -31,15 +29,6 @@ const Admin = () => {
           <div className="logo">LEBLOC - Admin</div>
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowUploadModal(true)}
-              className="flex items-center gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Upload
-            </Button>
-            <Button
               variant="ghost"
               size="sm"
               onClick={handleLogout}
@@ -54,11 +43,17 @@ const Admin = () => {
 
       <div className="main-content">
         <div className="container max-w-7xl mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-8">Painel Administrativo</h1>
+          
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-              <TabsTrigger value="gallery" className="flex items-center gap-2">
+            <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-8">
+              <TabsTrigger value="categories" className="flex items-center gap-2">
+                <Images className="h-4 w-4" />
+                Categorias
+              </TabsTrigger>
+              <TabsTrigger value="photos" className="flex items-center gap-2">
                 <Upload className="h-4 w-4" />
-                Galeria
+                Upload
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -66,8 +61,12 @@ const Admin = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="gallery" className="space-y-6">
-              <GallerySection showDeleteButton={true} />
+            <TabsContent value="categories" className="space-y-6">
+              <CategoryManagement />
+            </TabsContent>
+
+            <TabsContent value="photos" className="space-y-6">
+              <PhotoUpload />
             </TabsContent>
 
             <TabsContent value="users" className="space-y-6">
@@ -76,13 +75,6 @@ const Admin = () => {
           </Tabs>
         </div>
       </div>
-      
-      <UploadModal 
-        isOpen={showUploadModal} 
-        onClose={() => setShowUploadModal(false)} 
-        onUploadSuccess={() => window.location.reload()}
-      />
-      <SimpleMediaModal />
     </div>
   );
 };
