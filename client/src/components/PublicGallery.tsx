@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
@@ -94,19 +94,21 @@ const PublicGallery = () => {
     setModalPhoto(currentPhotos[prevIndex]);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (!modalPhoto) return;
-    
-    if (e.key === 'ArrowRight') nextPhoto();
-    if (e.key === 'ArrowLeft') prevPhoto();
-    if (e.key === 'Escape') closeModal();
-  };
+
 
   // Adicionar listener de teclado
-  useState(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  });
+  useEffect(() => {
+    const keyHandler = (e: KeyboardEvent) => {
+      if (!modalPhoto) return;
+      
+      if (e.key === 'ArrowRight') nextPhoto();
+      if (e.key === 'ArrowLeft') prevPhoto();
+      if (e.key === 'Escape') closeModal();
+    };
+
+    document.addEventListener('keydown', keyHandler);
+    return () => document.removeEventListener('keydown', keyHandler);
+  }, [modalPhoto, modalIndex, currentPhotos]);
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -213,11 +215,11 @@ const PublicGallery = () => {
           <DialogContent className="max-w-4xl w-full h-[90vh] p-0">
             <div className="relative w-full h-full flex flex-col">
               {/* Header */}
-              <div className="flex justify-between items-center p-4 border-b">
+              <div className="flex justify-between items-center p-4 border-b bg-background">
                 <div className="flex-1">
-                  <h3 className="font-semibold">{modalPhoto.title}</h3>
+                  <h3 className="font-semibold text-lg">{modalPhoto.title}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {modalIndex + 1} de {currentPhotos.length}
+                    {modalIndex + 1} de {currentPhotos.length} fotos
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -256,24 +258,24 @@ const PublicGallery = () => {
                   className="w-full h-full object-contain"
                 />
                 
-                {/* Navegação */}
+                {/* Navegação - Botões maiores e mais visíveis */}
                 {currentPhotos.length > 1 && (
                   <>
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white"
+                      variant="secondary"
+                      size="lg"
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-black shadow-lg z-10"
                       onClick={prevPhoto}
                     >
-                      <ChevronLeft className="h-6 w-6" />
+                      <ChevronLeft className="h-8 w-8" />
                     </Button>
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white"
+                      variant="secondary"
+                      size="lg"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-black shadow-lg z-10"
                       onClick={nextPhoto}
                     >
-                      <ChevronRight className="h-6 w-6" />
+                      <ChevronRight className="h-8 w-8" />
                     </Button>
                   </>
                 )}
