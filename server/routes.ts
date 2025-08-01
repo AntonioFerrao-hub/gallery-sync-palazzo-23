@@ -143,9 +143,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { title, description, categoryId, userId, externalLink } = req.body;
       
-      if (!title || !categoryId || !userId) {
-        return res.status(400).json({ error: 'Título, categoria e usuário são obrigatórios' });
+      if (!title || !categoryId) {
+        return res.status(400).json({ error: 'Título e categoria são obrigatórios' });
       }
+
+      // Usar ID 1 como usuário padrão se não fornecido ou inválido
+      const validUserId = userId && !isNaN(parseInt(userId)) ? parseInt(userId) : 1;
 
       const photo = await storage.createPhoto({
         title,
@@ -153,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: `/uploads/${req.file.filename}`,
         externalLink: externalLink || undefined,
         categoryId: parseInt(categoryId),
-        uploadedBy: parseInt(userId)
+        uploadedBy: validUserId
       });
 
       res.json(photo);

@@ -163,7 +163,7 @@ const PhotoUpload = () => {
     data.append('title', formData.title);
     data.append('description', formData.description);
     data.append('categoryId', formData.categoryId);
-    data.append('userId', currentUser?.id || '1'); // Fallback para usuário admin
+    data.append('userId', '1'); // ID do usuário admin
     if (formData.externalLink) {
       data.append('externalLink', formData.externalLink);
     }
