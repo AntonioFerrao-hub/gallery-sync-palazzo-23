@@ -109,9 +109,9 @@ const PublicGallery = () => {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-7xl mx-auto">
       {/* Filtros de categoria */}
-      <div className="flex flex-wrap gap-2 justify-center">
+      <div className="flex flex-wrap gap-2 justify-center px-4">
         <Button
           variant={selectedCategory === null ? "default" : "outline"}
           onClick={() => setSelectedCategory(null)}
@@ -130,7 +130,7 @@ const PublicGallery = () => {
       </div>
 
       {/* Galerias por categoria */}
-      <div className="space-y-12">
+      <div className="space-y-12 px-4">
         {categories
           .filter((category: Category) => 
             selectedCategory === null || category.id === selectedCategory
@@ -141,11 +141,11 @@ const PublicGallery = () => {
             if (photos.length === 0) return null;
 
             return (
-              <div key={category.id} className="space-y-4">
+              <div key={category.id} className="space-y-6">
                 <div className="text-center space-y-2">
                   <h2 className="text-3xl font-bold">{category.name}</h2>
                   {category.description && (
-                    <p className="text-muted-foreground max-w-2xl mx-auto">
+                    <p className="text-muted-foreground max-w-2xl mx-auto px-4">
                       {category.description}
                     </p>
                   )}
@@ -154,34 +154,36 @@ const PublicGallery = () => {
                   </Badge>
                 </div>
 
-                {/* Grid de fotos */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {photos.map((photo: Photo) => (
-                    <Card 
-                      key={photo.id} 
-                      className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                      onClick={() => openModal(photo, photos)}
-                    >
-                      <CardContent className="p-0">
-                        <div className="aspect-square relative">
-                          <img
-                            src={photo.imageUrl}
-                            alt={photo.title}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                            <div className="text-white opacity-0 hover:opacity-100 transition-opacity text-center p-4">
-                              <h3 className="font-semibold text-sm mb-1">{photo.title}</h3>
-                              {photo.description && (
-                                <p className="text-xs line-clamp-2">{photo.description}</p>
-                              )}
+                {/* Grid de fotos centralizado */}
+                <div className="flex justify-center">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl w-full">
+                    {photos.map((photo: Photo) => (
+                      <Card 
+                        key={photo.id} 
+                        className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={() => openModal(photo, photos)}
+                      >
+                        <CardContent className="p-0">
+                          <div className="aspect-square relative">
+                            <img
+                              src={photo.imageUrl}
+                              alt={photo.title}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                              <div className="text-white opacity-0 hover:opacity-100 transition-opacity text-center p-4">
+                                <h3 className="font-semibold text-sm mb-1">{photo.title}</h3>
+                                {photo.description && (
+                                  <p className="text-xs line-clamp-2">{photo.description}</p>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Ver mais fotos (se houver exatamente 8 fotos, significa que tem mais) */}
