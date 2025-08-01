@@ -183,7 +183,7 @@ const PhotoUpload = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Área de upload */}
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
               dragOver 
                 ? 'border-blue-500 bg-blue-50' 
                 : selectedFile 
@@ -193,6 +193,20 @@ const PhotoUpload = () => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
+            onClick={() => {
+              if (!selectedFile) {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    handleFileSelect(file);
+                  }
+                };
+                input.click();
+              }
+            }}
           >
             {selectedFile ? (
               <div className="space-y-2">
@@ -205,7 +219,10 @@ const PhotoUpload = () => {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setSelectedFile(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedFile(null);
+                  }}
                 >
                   Remover arquivo
                 </Button>
@@ -221,12 +238,6 @@ const PhotoUpload = () => {
                 </p>
               </div>
             )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileInputChange}
-              className="absolute opacity-0 w-full h-full cursor-pointer"
-            />
           </div>
 
           {/* Informações da foto */}
