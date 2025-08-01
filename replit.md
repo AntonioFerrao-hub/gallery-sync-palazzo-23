@@ -34,39 +34,95 @@ Preferred communication style: Simple, everyday language.
 - **Session Management**: In-memory storage with fallback authentication system
 - **Development**: Hot reload with Vite middleware integration
 
-## Key Components
+## Application Structure
+
+### Frontend Pages and Components
+- **Index Page** (`/`): Public gallery with media display and filtering
+- **Admin Panel** (`/admin`): Protected admin interface with tabs for gallery and user management
+- **Login Page** (`/login`): Authentication interface with form validation
+- **NotFound Page**: 404 error handling with user-friendly messaging
+
+### Core Components
+- **Header**: Navigation bar with login/logout functionality
+- **GallerySection**: Media grid with category filtering and responsive layout
+- **MediaModal/SimpleMediaModal**: Full-screen media viewer with navigation
+- **UploadModal**: File upload interface with drag-and-drop support
+- **UserManagement**: Admin interface for managing users and permissions
+- **ProtectedRoute**: Route guard component for admin access control
+
+### UI Component Library (shadcn/ui)
+- Complete set of accessible components built on Radix UI
+- Button, Input, Dialog, Tabs, Toast, Badge, and more
+- Consistent design system with CSS custom properties
+- Dark/light theme support through CSS variables
+
+## Key Features
 
 ### Authentication System
-- Role-based access control (admin/user)
-- Default admin account (admin@lebloc.com / admin123)
-- localStorage-based session persistence
-- Protected routes with redirect logic
+- **User Types**: Admin and regular users with role-based access
+- **Default Admin**: admin@lebloc.com / admin123 (auto-created)
+- **Session Management**: localStorage-based persistence with automatic initialization
+- **Route Protection**: Protected admin routes with redirect logic
 
 ### Media Management
-- File upload support for images (JPG, PNG, GIF) and videos (MP4, WebM)
-- Size limits: 2MB for images, 20GB for videos
-- Local file storage in uploads directory
-- Base64 conversion for client-side storage fallback
-- Media categorization by event types
+- **File Types**: Images (JPG, PNG, GIF) and Videos (MP4, WebM)
+- **Size Limits**: 2MB for images, 20GB for videos
+- **Storage**: Local filesystem with uploads directory + localStorage fallback
+- **Categories**: Estrutura, Formatura, Casamento, Corporativo, Eventos Sociais
+- **Upload Methods**: Form-based upload with file validation
 
 ### Gallery Display
-- Responsive grid layout with category filtering
-- Modal viewer with navigation controls
-- Thumbnail generation for videos
-- Full-screen media display
+- **Layout**: Responsive CSS Grid with automatic sizing
+- **Filtering**: Category-based filtering with "Todos" option
+- **Modal Viewer**: Full-screen display with navigation controls
+- **Media Preview**: Automatic thumbnail generation for videos
+- **Responsive Design**: Mobile-first approach with breakpoint optimization
 
-### User Interface
-- Modern design system with CSS custom properties
-- Dark/light theme support through CSS variables
-- Responsive design for mobile and desktop
-- Toast notifications for user feedback
+### Admin Features
+- **Dual Interface**: Tabbed admin panel (Gallery + Users)
+- **Media Management**: Upload, view, and delete media with ownership validation
+- **User Management**: Create, edit, and manage user accounts
+- **Permissions**: Admin-only access to sensitive operations
 
-## Data Flow
+## Technical Implementation
 
-1. **Authentication Flow**: User logs in → credentials validated against stored users → session established in localStorage → protected routes accessible
-2. **Media Upload Flow**: File selected → validation (type/size) → conversion to base64 → saved to localStorage and server storage → gallery updated
-3. **Gallery Display Flow**: Media items loaded from storage → filtered by category → displayed in responsive grid → modal opens on click
-4. **Admin Management Flow**: Admin users can upload media, manage users, delete content with ownership validation
+### Data Models and Types
+```typescript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  role?: 'admin' | 'user';
+}
+
+interface MediaItem {
+  id: string;
+  title: string;
+  category: Category;
+  type: 'image' | 'video';
+  url: string;
+  thumbnailUrl?: string;
+  userId: string;
+  createdAt: string;
+  size: number;
+  filename: string;
+}
+
+type Category = 'Estrutura' | 'Formatura' | 'Casamento' | 'Corporativo' | 'Eventos Sociais';
+```
+
+### Data Flow
+1. **Authentication Flow**: User login → credential validation → localStorage session → route access
+2. **Media Upload Flow**: File selection → validation → base64 conversion → dual storage (localStorage + server)
+3. **Gallery Display Flow**: Media loading → category filtering → grid rendering → modal interaction
+4. **Admin Management Flow**: Authentication check → admin interface → CRUD operations → data persistence
+
+### Storage Strategy
+- **Primary Storage**: localStorage for client-side persistence and offline capability
+- **Server Storage**: Local filesystem (`/uploads`) for production file serving
+- **Fallback System**: Base64 encoding in localStorage when server storage fails
+- **Session Data**: User authentication and preferences in localStorage
 
 ## External Dependencies
 
@@ -115,3 +171,69 @@ The application supports multiple deployment platforms:
 4. For file storage, integrate cloud service (Cloudinary, AWS S3, or Vercel Blob)
 
 The application is designed for deployment on both Replit and Vercel, with automatic database provisioning through environment variables.
+
+## File Structure
+
+```
+/
+├── client/                     # Frontend React application
+│   ├── src/
+│   │   ├── components/         # Reusable UI components
+│   │   │   ├── ui/            # shadcn/ui component library
+│   │   │   ├── GallerySection.tsx
+│   │   │   ├── Header.tsx
+│   │   │   ├── Login.tsx
+│   │   │   ├── MediaModal.tsx
+│   │   │   ├── ProtectedRoute.tsx
+│   │   │   ├── UploadModal.tsx
+│   │   │   └── UserManagement.tsx
+│   │   ├── pages/             # Application pages
+│   │   │   ├── Admin.tsx      # Admin dashboard
+│   │   │   ├── Index.tsx      # Public gallery
+│   │   │   └── NotFound.tsx   # 404 handler
+│   │   ├── types/             # TypeScript definitions
+│   │   ├── utils/             # Utility functions
+│   │   │   ├── auth.ts        # Authentication logic
+│   │   │   ├── media.ts       # Media handling
+│   │   │   └── sampleData.ts  # Initial data
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── lib/               # Configuration and setup
+│   │   └── assets/            # Static images and media
+│   ├── index.html             # HTML template
+│   └── public/                # Static assets
+├── server/                     # Backend Express application
+│   ├── index.ts               # Server entry point
+│   ├── routes.ts              # API routes and middleware
+│   ├── storage.ts             # Data storage interface
+│   └── vite.ts                # Vite development setup
+├── shared/                     # Shared code between client/server
+│   └── schema.ts              # Database schema (Drizzle)
+├── api/                       # Vercel serverless functions
+│   ├── media/upload.ts        # File upload endpoint
+│   └── uploads/[...path].ts   # Static file serving
+├── uploads/                   # Local file storage directory
+├── vercel.json                # Vercel deployment configuration
+├── build.sh                   # Build script for deployment
+├── README-VERCEL.md           # Vercel deployment guide
+└── package.json               # Dependencies and scripts
+```
+
+## Development Workflow
+
+### Local Development (Replit)
+1. **Start Server**: `npm run dev` (Express + Vite)
+2. **Database**: PostgreSQL via environment variables
+3. **Hot Reload**: Automatic file watching and server restart
+4. **File Storage**: Local uploads directory
+
+### Production Build
+1. **Frontend Build**: `vite build` → `dist/public/`
+2. **Backend Bundle**: `esbuild` → `dist/index.js`
+3. **Static Serving**: Express serves built files
+4. **Database Migration**: `npm run db:push`
+
+### Vercel Deployment
+1. **Serverless APIs**: Functions in `/api` directory
+2. **Static Hosting**: Built files served from CDN
+3. **Environment Variables**: Database and configuration
+4. **File Storage**: Requires external service (Cloudinary, S3, etc.)
