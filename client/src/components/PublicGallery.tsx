@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { ChevronLeft, ChevronRight, ExternalLink, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -212,9 +212,13 @@ const PublicGallery = () => {
       {/* Modal de visualização */}
       {modalPhoto && (
         <Dialog open={true} onOpenChange={closeModal}>
-          <DialogContent className="max-w-4xl w-full h-[90vh] p-0">
+          <DialogContent className="max-w-4xl w-full h-[90vh] p-0" aria-describedby="modal-description">
             <div className="relative w-full h-full flex flex-col">
-              {/* Header */}
+              {/* Header com DialogTitle para acessibilidade */}
+              <DialogTitle className="sr-only">{modalPhoto.title}</DialogTitle>
+              <div id="modal-description" className="sr-only">
+                Visualizando foto {modalIndex + 1} de {currentPhotos.length} na galeria
+              </div>
               <div className="flex justify-between items-center p-4 border-b bg-background">
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">{modalPhoto.title}</h3>

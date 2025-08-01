@@ -14,9 +14,12 @@ import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
+  getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
+  deleteUser(id: number): Promise<void>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -37,6 +40,10 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // User operations
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.name);
+  }
+
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
@@ -53,6 +60,19 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   // Category operations

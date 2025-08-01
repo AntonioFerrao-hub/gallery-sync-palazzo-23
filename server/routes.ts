@@ -195,17 +195,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User routes
+  app.get('/api/users', async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
   app.post('/api/users', async (req, res) => {
     try {
-      const { username, password, role } = req.body;
-      if (!username || !password) {
-        return res.status(400).json({ error: 'Username e password são obrigatórios' });
+      const { name, email, password, role } = req.body;
+      if (!name || !email || !password) {
+        return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
       }
       
-      const user = await storage.createUser({ username, password, role: role || 'user' });
+      const user = await storage.createUser({ 
+        username: email, // Use email as username
+        name, 
+        email, 
+        password, 
+        role: role || 'user' 
+      });
       res.json(user);
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  app.put('/api/users/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, email, role, password } = req.body;
+      
+      const updates: any = { name, email, role };
+      if (password) {
+        updates.password = password;
+      }
+      
+      const user = await storage.updateUser(id, updates);
+      res.json(user);
+    } catch (error) {
+      console.error('Erro ao atualizar usuário:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  app.delete('/api/users/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (id === 1) {
+        return res.status(400).json({ error: 'Não é possível deletar o usuário administrador principal' });
+      }
+      
+      await storage.deleteUser(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   });

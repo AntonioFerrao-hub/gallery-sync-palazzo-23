@@ -6,9 +6,12 @@ import { relations } from "drizzle-orm";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  name: text("name"),
+  email: text("email").unique(),
   password: text("password").notNull(),
   role: text("role").default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const categories = pgTable("categories", {
@@ -55,6 +58,8 @@ export const photosRelations = relations(photos, ({ one }) => ({
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  name: true,
+  email: true,
   password: true,
   role: true,
 });
