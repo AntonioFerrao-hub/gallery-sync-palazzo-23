@@ -253,9 +253,7 @@ const PhotoUpload = () => {
                 <p className="text-sm">
                   <strong>Clique para selecionar</strong> ou arraste uma imagem aqui
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Máximo 1MB • JPG, PNG, GIF
-                </p>
+                <p className="text-xs text-muted-foreground">Máximo 2MB • JPG, PNG, GIF</p>
               </div>
             )}
           </div>
