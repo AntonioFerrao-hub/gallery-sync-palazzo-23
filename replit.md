@@ -10,15 +10,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**2025-02-01**: Implementado sistema completo de galeria LEBLOC
-- ✓ Configurado banco PostgreSQL com schema completo (users, categories, photos)
-- ✓ Implementada autenticação administrativa com token básico
-- ✓ Desenvolvida área administrativa completa com dashboard, categorias e fotos
-- ✓ Criada galeria pública responsiva com filtros por categoria
-- ✓ Adicionado sistema de upload com suporte base64 para Vercel
-- ✓ Implementado modal de visualização com navegação entre fotos
-- ✓ Configurado deployment para Replit e Vercel com funções serverless
-- ✓ Criado usuário admin padrão (admin/admin123)
+**2025-01-31**: Configured Vercel deployment support
+- ✓ Created `vercel.json` configuration file
+- ✓ Set up serverless API functions in `/api` directory
+- ✓ Added file upload handler for Vercel environment
+- ✓ Created build script and deployment documentation
+- ✓ Configured routing for static files and API endpoints
 
 ## System Architecture
 

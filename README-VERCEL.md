@@ -117,11 +117,6 @@ vercel remove
 
 ### 10. Troubleshooting
 
-**Erro 404 em rotas (ex: /admin)**:
-- ✅ Já configurado: `vercel.json` com rewrites para SPA
-- ✅ Já configurado: `_redirects` na pasta client/public
-- Todas as rotas do cliente agora redirecionam para `index.html`
-
 **Erro de build**:
 ```bash
 # Limpar cache e rebuildar
