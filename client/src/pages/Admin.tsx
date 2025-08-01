@@ -5,6 +5,7 @@ import { logout, getCurrentUser } from '../utils/auth';
 import { useToast } from '../hooks/use-toast';
 import UserManagement from '../components/UserManagement';
 import CategoryManagement from '../components/CategoryManagement';
+import GalleryManagement from '../components/GalleryManagement';
 import PhotoUpload from '../components/PhotoUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
@@ -46,10 +47,14 @@ const Admin = () => {
           <h1 className="text-3xl font-bold mb-8">Painel Administrativo</h1>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-8">
+            <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-8">
               <TabsTrigger value="categories" className="flex items-center gap-2">
                 <Images className="h-4 w-4" />
                 Categorias
+              </TabsTrigger>
+              <TabsTrigger value="gallery" className="flex items-center gap-2">
+                <Images className="h-4 w-4" />
+                Galeria
               </TabsTrigger>
               <TabsTrigger value="photos" className="flex items-center gap-2">
                 <Upload className="h-4 w-4" />
@@ -63,6 +68,10 @@ const Admin = () => {
 
             <TabsContent value="categories" className="space-y-6">
               <CategoryManagement />
+            </TabsContent>
+
+            <TabsContent value="gallery" className="space-y-6">
+              <GalleryManagement />
             </TabsContent>
 
             <TabsContent value="photos" className="space-y-6">

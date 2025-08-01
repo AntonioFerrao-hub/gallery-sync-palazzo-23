@@ -31,6 +31,7 @@ export interface IStorage {
   
   // Photo operations
   getPhotos(): Promise<Photo[]>;
+  getPhoto(id: number): Promise<Photo | undefined>;
   getPhotosByCategory(categoryId: number): Promise<Photo[]>;
   getRecentPhotosByCategory(categoryId: number, limit?: number): Promise<Photo[]>;
   getPhotoById(id: number): Promise<Photo | undefined>;
@@ -115,6 +116,11 @@ export class DatabaseStorage implements IStorage {
   // Photo operations
   async getPhotos(): Promise<Photo[]> {
     return await db.select().from(photos).orderBy(desc(photos.createdAt));
+  }
+
+  async getPhoto(id: number): Promise<Photo | undefined> {
+    const [photo] = await db.select().from(photos).where(eq(photos.id, id));
+    return photo || undefined;
   }
 
   async getPhotosByCategory(categoryId: number): Promise<Photo[]> {

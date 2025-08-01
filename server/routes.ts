@@ -61,12 +61,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const { name, description } = req.body;
       
-      let updates: any = { name, description };
-      if (name) {
-        updates.slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      if (!name) {
+        return res.status(400).json({ error: 'Nome da categoria é obrigatório' });
       }
       
-      const category = await storage.updateCategory(id, updates);
+      const category = await storage.updateCategory(id, { name, description });
       res.json(category);
     } catch (error) {
       console.error('Erro ao atualizar categoria:', error);
@@ -77,6 +76,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/categories/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Verificar se a categoria tem fotos
+      const photos = await storage.getPhotosByCategory(id);
+      if (photos.length > 0) {
+        return res.status(400).json({ 
+          error: `Não é possível deletar esta categoria. Ela possui ${photos.length} foto(s). Remova todas as fotos primeiro.`
+        });
+      }
+      
       await storage.deleteCategory(id);
       res.json({ success: true });
     } catch (error) {
@@ -126,12 +134,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Nenhum arquivo enviado' });
       }
 
-      // Verificar tamanho do arquivo (1MB = 1024 * 1024 bytes)
-      const maxSize = 1024 * 1024; // 1MB
+      // Verificar tamanho do arquivo (2MB = 2 * 1024 * 1024 bytes)
+      const maxSize = 2 * 1024 * 1024; // 2MB
       if (req.file.size > maxSize) {
         return res.status(400).json({ 
-          error: 'Arquivo muito grande. O tamanho máximo é 1MB.',
-          maxSize: '1MB',
+          error: 'Arquivo muito grande. O tamanho máximo é 2MB.',
+          maxSize: '2MB',
           currentSize: `${(req.file.size / 1024 / 1024).toFixed(2)}MB`
         });
       }
@@ -142,6 +150,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { title, description, categoryId, userId, externalLink } = req.body;
+
+      // Verificar limite de 20 fotos por categoria
+      const categoryPhotos = await storage.getPhotosByCategory(parseInt(categoryId));
+      if (categoryPhotos.length >= 20) {
+        return res.status(400).json({ 
+          error: 'Esta categoria já possui 20 fotos (limite máximo). Remova algumas fotos antes de adicionar novas.'
+        });
+      }
       
       if (!title || !categoryId) {
         return res.status(400).json({ error: 'Título e categoria são obrigatórios' });
@@ -186,6 +202,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/photos/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const photo = await storage.getPhoto(id);
+      
+      if (!photo) {
+        return res.status(404).json({ error: 'Foto não encontrada' });
+      }
+
+      // Deletar arquivo físico
+      const fs = require('fs');
+      const path = require('path');
+      const filePath = path.join(__dirname, '..', photo.imageUrl);
+      
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (fileError) {
+        console.error('Erro ao deletar arquivo físico:', fileError);
+      }
+
       await storage.deletePhoto(id);
       res.json({ success: true });
     } catch (error) {

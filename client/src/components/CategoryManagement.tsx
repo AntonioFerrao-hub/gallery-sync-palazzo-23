@@ -3,11 +3,13 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { Plus, Edit2, Trash2, Folder, FolderOpen } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface Category {
   id: number;
@@ -39,24 +41,37 @@ const CategoryManagement = () => {
     }
   });
 
+  // Buscar contagem de fotos por categoria
+  const { data: photoCounts = {} } = useQuery({
+    queryKey: ['/api/categories/photos-count', categories],
+    queryFn: async () => {
+      const counts: Record<number, number> = {};
+      
+      for (const category of categories) {
+        const response = await fetch(`/api/photos/category/${category.id}`);
+        if (response.ok) {
+          const photos = await response.json();
+          counts[category.id] = photos.length;
+        }
+      }
+      
+      return counts;
+    },
+    enabled: categories.length > 0
+  });
+
   // Criar categoria
   const createMutation = useMutation({
     mutationFn: async (data: { name: string; description: string }) => {
-      const response = await fetch('/api/categories', {
+      return await apiRequest('/api/categories', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Erro ao criar categoria');
-      }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
       setIsCreateOpen(false);
-      setFormData({ name: '', description: '' });
+      resetForm();
       toast({ title: 'Categoria criada com sucesso!' });
     },
     onError: (error: Error) => {
@@ -71,21 +86,16 @@ const CategoryManagement = () => {
   // Atualizar categoria
   const updateMutation = useMutation({
     mutationFn: async (data: { id: number; name: string; description: string }) => {
-      const response = await fetch(`/api/categories/${data.id}`, {
+      const { id, ...updateData } = data;
+      return await apiRequest(`/api/categories/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: data.name, description: data.description })
+        body: JSON.stringify(updateData)
       });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Erro ao atualizar categoria');
-      }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
       setEditingCategory(null);
-      setFormData({ name: '', description: '' });
+      resetForm();
       toast({ title: 'Categoria atualizada com sucesso!' });
     },
     onError: (error: Error) => {
@@ -100,13 +110,9 @@ const CategoryManagement = () => {
   // Deletar categoria
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/categories/${id}`, {
+      return await apiRequest(`/api/categories/${id}`, {
         method: 'DELETE'
       });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Erro ao deletar categoria');
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
@@ -121,13 +127,21 @@ const CategoryManagement = () => {
     }
   });
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: ''
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.name.trim()) {
-      toast({ 
-        title: 'Nome obrigatório', 
-        description: 'Por favor, insira um nome para a categoria',
-        variant: 'destructive' 
+      toast({
+        title: 'Erro',
+        description: 'Nome da categoria é obrigatório',
+        variant: 'destructive'
       });
       return;
     }
@@ -135,11 +149,14 @@ const CategoryManagement = () => {
     if (editingCategory) {
       updateMutation.mutate({
         id: editingCategory.id,
-        name: formData.name,
-        description: formData.description
+        name: formData.name.trim(),
+        description: formData.description.trim()
       });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate({
+        name: formData.name.trim(),
+        description: formData.description.trim()
+      });
     }
   };
 
@@ -153,7 +170,24 @@ const CategoryManagement = () => {
 
   const cancelEdit = () => {
     setEditingCategory(null);
-    setFormData({ name: '', description: '' });
+    resetForm();
+  };
+
+  const handleDelete = (category: Category) => {
+    const photoCount = photoCounts[category.id] || 0;
+    
+    if (photoCount > 0) {
+      toast({
+        title: 'Operação não permitida',
+        description: `Esta categoria possui ${photoCount} foto(s). Remova todas as fotos antes de deletar a categoria.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (confirm(`Tem certeza que deseja deletar a categoria "${category.name}"?`)) {
+      deleteMutation.mutate(category.id);
+    }
   };
 
   if (isLoading) {
@@ -174,14 +208,17 @@ const CategoryManagement = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Criar Nova Categoria</DialogTitle>
+              <DialogDescription>
+                Preencha os dados para criar uma nova categoria de fotos
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Nome</label>
+                <label className="text-sm font-medium">Nome *</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nome da categoria"
+                  placeholder="Ex: Casamentos, Formaturas..."
                   required
                 />
               </div>
@@ -190,7 +227,7 @@ const CategoryManagement = () => {
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descrição da categoria (opcional)"
+                  placeholder="Descrição opcional da categoria"
                   rows={3}
                 />
               </div>
@@ -215,50 +252,75 @@ const CategoryManagement = () => {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {categories.map((category: Category) => (
-          <Card key={category.id}>
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{category.name}</CardTitle>
-                <Badge variant="secondary">{category.slug}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {category.description && (
-                <p className="text-sm text-muted-foreground mb-4">
-                  {category.description}
-                </p>
-              )}
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => startEdit(category)}
-                  className="flex items-center gap-1"
-                >
-                  <Edit2 className="h-3 w-3" />
-                  Editar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => {
-                    if (confirm('Tem certeza que deseja deletar esta categoria?')) {
-                      deleteMutation.mutate(category.id);
-                    }
-                  }}
-                  disabled={deleteMutation.isPending}
-                  className="flex items-center gap-1"
-                >
-                  <Trash2 className="h-3 w-3" />
-                  Deletar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Tabela de categorias */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Categorias do Sistema</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Fotos</TableHead>
+                <TableHead>Criado em</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {categories.map((category: Category) => (
+                <TableRow key={category.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {photoCounts[category.id] > 0 ? (
+                        <FolderOpen className="h-4 w-4 text-blue-500" />
+                      ) : (
+                        <Folder className="h-4 w-4 text-gray-500" />
+                      )}
+                      {category.name}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {category.description || <span className="text-gray-400">Sem descrição</span>}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={photoCounts[category.id] >= 20 ? 'destructive' : 'secondary'}>
+                      {photoCounts[category.id] || 0}/20
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {new Date(category.createdAt).toLocaleDateString('pt-BR')}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => startEdit(category)}
+                        className="flex items-center gap-1"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(category)}
+                        disabled={deleteMutation.isPending || (photoCounts[category.id] || 0) > 0}
+                        className="flex items-center gap-1"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Deletar
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Modal de edição */}
       {editingCategory && (
@@ -266,14 +328,17 @@ const CategoryManagement = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Editar Categoria</DialogTitle>
+              <DialogDescription>
+                Modifique os dados da categoria selecionada
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Nome</label>
+                <label className="text-sm font-medium">Nome *</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nome da categoria"
+                  placeholder="Ex: Casamentos, Formaturas..."
                   required
                 />
               </div>
@@ -282,7 +347,7 @@ const CategoryManagement = () => {
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descrição da categoria (opcional)"
+                  placeholder="Descrição opcional da categoria"
                   rows={3}
                 />
               </div>
@@ -305,15 +370,6 @@ const CategoryManagement = () => {
             </form>
           </DialogContent>
         </Dialog>
-      )}
-
-      {categories.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Nenhuma categoria encontrada.</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Clique em "Nova Categoria" para criar sua primeira categoria.
-          </p>
-        </div>
       )}
     </div>
   );

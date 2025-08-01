@@ -76,16 +76,36 @@ const PhotoUpload = () => {
     }
   });
 
-  const handleFileSelect = (file: File) => {
-    // Verificar tamanho (1MB)
-    const maxSize = 1024 * 1024; // 1MB
+  const handleFileSelect = async (file: File) => {
+    // Verificar tamanho (2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
       toast({
         title: 'Arquivo muito grande',
-        description: `O arquivo deve ter no máximo 1MB. Seu arquivo tem ${(file.size / 1024 / 1024).toFixed(2)}MB.`,
+        description: `O arquivo deve ter no máximo 2MB. Seu arquivo tem ${(file.size / 1024 / 1024).toFixed(2)}MB.`,
         variant: 'destructive'
       });
       return;
+    }
+
+    // Verificar limite de 20 fotos por categoria
+    if (formData.categoryId) {
+      try {
+        const response = await fetch(`/api/photos/category/${formData.categoryId}`);
+        if (response.ok) {
+          const photos = await response.json();
+          if (photos.length >= 20) {
+            toast({
+              title: 'Limite excedido',
+              description: 'Esta categoria já possui 20 fotos (limite máximo). Remova algumas fotos antes de adicionar novas.',
+              variant: 'destructive'
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar limite:', error);
+      }
     }
 
     // Verificar tipo
