@@ -261,16 +261,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/auth/login', async (req, res) => {
     try {
-      const { username, password } = req.body;
-      const user = await storage.getUserByUsername(username);
+      const { email, password } = req.body;
+      const user = await storage.getUserByEmail(email);
       
       if (!user || user.password !== password) {
-        return res.status(401).json({ error: 'Credenciais inválidas' });
+        return res.status(401).json({ error: 'Usuário não encontrado. Verifique o email ou registre-se.' });
       }
       
-      res.json({ user: { id: user.id, username: user.username, role: user.role } });
+      res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
       console.error('Erro no login:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { name, email, password } = req.body;
+      if (!name || !email || !password) {
+        return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
+      }
+
+      // Verificar se usuário já existe
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: 'Usuário já existe com este email.' });
+      }
+      
+      const user = await storage.createUser({ 
+        username: email, // Use email as username
+        name, 
+        email, 
+        password, 
+        role: 'user' // Sempre 'user' para registro público
+      });
+      res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    } catch (error) {
+      console.error('Erro ao registrar usuário:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   });

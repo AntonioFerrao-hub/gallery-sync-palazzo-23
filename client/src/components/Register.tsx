@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { findUserByEmail, saveUser, setCurrentUser, generateId } from '../utils/auth';
+import { Link, useLocation } from 'wouter';
+import { setCurrentUser } from '../utils/auth';
 import { useToast } from '../hooks/use-toast';
 
 const Register = () => {
@@ -9,7 +9,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,32 +36,33 @@ const Register = () => {
         return;
       }
 
-      // Verifica se usuário já existe
-      if (findUserByEmail(email)) {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
         toast({
           title: "Erro",
-          description: "Usuário já existe com este email.",
+          description: data.error || "Erro ao criar conta",
           variant: "destructive"
         });
         return;
       }
 
-      // Cria novo usuário
-      const newUser = {
-        id: generateId(),
-        name,
-        email,
-        password
-      };
-
-      saveUser(newUser);
+      setCurrentUser(data.user);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
       
-      setCurrentUser(newUser);
       toast({
         title: "Sucesso",
         description: `Conta criada com sucesso! Bem-vindo, ${name}!`
       });
-      navigate('/');
+      setLocation('/');
     } catch (error) {
       toast({
         title: "Erro",

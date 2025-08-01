@@ -15,31 +15,31 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const user = findUserByEmail(email);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast({
+          title: "Erro",
+          description: data.error || "Erro ao fazer login",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setCurrentUser(data.user);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
       
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Usuário não encontrado. Verifique o email ou registre-se.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Verifica senha diretamente do objeto user
-      if (user.password !== password) {
-        toast({
-          title: "Erro",
-          description: "Senha incorreta.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      setCurrentUser(user);
       toast({
         title: "Sucesso",
-        description: `Bem-vindo, ${user.name}!`
+        description: `Bem-vindo, ${data.user.name}!`
       });
       setLocation('/admin');
     } catch (error) {
